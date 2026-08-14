@@ -276,3 +276,28 @@ body {
     font-weight: bold;
     font-style: normal;
 }
+
+/** 定制 **/
+#menu {
+    display: none;
+}
+#app-label{
+    display: none;
+}
+#mode-toggle{
+    display: none;
+}
+#scene-panel{
+    display: none;
+}
+#right-toolbar {
+    display: none;
+}
+#status-bar{
+    display: none;
+}
+.pcui-button:hover,
+.pcui-input-element:hover {
+    box-shadow: 0 0 2px 1px rgba(0,123,255, 0.3) !important;
+}
+
