@@ -36,6 +36,10 @@ class BottomToolbar extends Container {
             event.stopPropagation();
         });
 
+        const controls = new Container({
+            class: 'bottom-toolbar-controls'
+        });
+
         const undo = new Button({
             id: 'bottom-toolbar-undo',
             class: 'bottom-toolbar-button',
@@ -133,6 +137,13 @@ class BottomToolbar extends Container {
             icon: 'E189'
         });
 
+        const calculate = new Button({
+            id: 'bottom-toolbar-calculate',
+            class: 'bottom-toolbar-calculate',
+            enabled: false,
+            text: '计算'
+        });
+
         undo.dom.appendChild(createSvg(undoSvg));
         redo.dom.appendChild(createSvg(redoSvg));
         picker.dom.appendChild(createSvg(pickerSvg));
@@ -147,28 +158,30 @@ class BottomToolbar extends Container {
         orient.dom.appendChild(createSvg(orientSvg));
         // crop.dom.appendChild(createSvg(cropSvg));
 
-        this.append(undo);
-        this.append(redo);
-        this.append(new Element({ class: 'bottom-toolbar-separator' }));
-        this.append(picker);
-        this.append(lasso);
-        this.append(polygon);
-        this.append(brush);
-        this.append(flood);
-        this.append(eyedropper);
-        this.append(new Element({ class: 'bottom-toolbar-separator' }));
-        this.append(sphere);
-        this.append(box);
+        controls.append(undo);
+        controls.append(redo);
+        controls.append(new Element({ class: 'bottom-toolbar-separator' }));
+        controls.append(picker);
+        controls.append(lasso);
+        controls.append(polygon);
+        controls.append(brush);
+        controls.append(flood);
+        controls.append(eyedropper);
+        controls.append(new Element({ class: 'bottom-toolbar-separator' }));
+        controls.append(sphere);
+        controls.append(box);
         // this.append(crop);
-        this.append(new Element({ class: 'bottom-toolbar-separator' }));
-        this.append(move);
-        this.append(rotate);
-        this.append(scale);
-        this.append(new Element({ class: 'bottom-toolbar-separator' }));
-        this.append(measure);
-        this.append(orient);
-        this.append(coordSpace);
-        this.append(origin);
+        controls.append(new Element({ class: 'bottom-toolbar-separator' }));
+        controls.append(move);
+        controls.append(rotate);
+        controls.append(scale);
+        controls.append(new Element({ class: 'bottom-toolbar-separator' }));
+        controls.append(measure);
+        controls.append(orient);
+        controls.append(coordSpace);
+        controls.append(origin);
+        this.append(controls);
+        this.append(calculate);
 
         undo.dom.addEventListener('click', () => events.fire('edit.undo'));
         redo.dom.addEventListener('click', () => events.fire('edit.redo'));
@@ -186,6 +199,13 @@ class BottomToolbar extends Container {
         measure.dom.addEventListener('click', () => events.fire('tool.measure'));
         orient.dom.addEventListener('click', () => events.fire('tool.orient'));
         coordSpace.dom.addEventListener('click', () => events.fire('tool.toggleCoordSpace'));
+        calculate.dom.addEventListener('click', () => {
+            if (events.invoke('scene.empty')) {
+                return;
+            }
+
+            events.invoke('scene.export', 'ply', true);
+        });
         origin.dom.addEventListener('click', (e: MouseEvent) => {
             if (events.invoke('tool.active') === 'orient') {
                 events.fire('orient.setPivot');
@@ -200,6 +220,13 @@ class BottomToolbar extends Container {
         events.on('edit.canRedo', (value: boolean) => {
             redo.enabled = value;
         });
+
+        const updateCalculateEnabled = () => {
+            calculate.enabled = !events.invoke('scene.empty');
+        };
+
+        events.on('scene.elementAdded', updateCalculateEnabled);
+        events.on('scene.elementRemoved', updateCalculateEnabled);
 
         events.on('tool.activated', (toolName: string) => {
             picker.class[toolName === 'rectSelection' ? 'add' : 'remove']('active');

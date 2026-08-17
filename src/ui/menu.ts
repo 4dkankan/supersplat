@@ -135,6 +135,12 @@ class Menu extends Container {
             isEnabled: () => !events.invoke('scene.empty'),
             onSelect: () => events.invoke('scene.export', 'ply')
         }, {
+            text: 'PLY (客户端路径)',
+            icon: createSvg(sceneExport),
+            isVisible: () => window.parent !== window,
+            isEnabled: () => !events.invoke('scene.empty'),
+            onSelect: () => events.invoke('scene.export', 'ply', true)
+        }, {
             text: 'SOG (.sog)',
             icon: createSvg(sceneExport),
             isEnabled: () => !events.invoke('scene.empty'),
