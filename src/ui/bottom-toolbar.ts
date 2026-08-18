@@ -175,11 +175,11 @@ class BottomToolbar extends Container {
         controls.append(move);
         controls.append(rotate);
         controls.append(scale);
-        controls.append(new Element({ class: 'bottom-toolbar-separator' }));
-        controls.append(measure);
-        controls.append(orient);
-        controls.append(coordSpace);
-        controls.append(origin);
+        // controls.append(new Element({ class: 'bottom-toolbar-separator' }));
+        // controls.append(measure);
+        // controls.append(orient);
+        // controls.append(coordSpace);
+        // controls.append(origin);
         this.append(controls);
         this.append(calculate);
 
