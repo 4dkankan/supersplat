@@ -6,14 +6,46 @@
     bottom: 24px;
     height: 54px;
     transform: translate(-50%, 0);
-    padding: 0px 8px;
-    border-radius: 8px;
-
-    background-color: $bcg-dark;
-
     display: flex;
     flex-direction: row;
     align-items: center;
+}
+
+.bottom-toolbar-controls {
+    height: 54px;
+    padding: 0px 8px;
+    border-radius: 8px;
+    background-color: $bcg-dark;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.bottom-toolbar-calculate {
+    width: 96px;
+    height: 32px;
+    margin: 0 0 0 8px;
+    padding: 0 16px;
+    border: 0;
+    border-radius: 4px;
+    background-color: #007bff;
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 32px;
+
+    &:not(.pcui-disabled, .pcui-readonly) {
+        &:hover,
+        &:focus {
+            background-color: #1683ff;
+            color: white;
+            box-shadow: none;
+        }
+
+        &:active {
+            background-color: #0067d6;
+        }
+    }
 }
 
 .bottom-toolbar-button, .bottom-toolbar-tool, .bottom-toolbar-toggle {

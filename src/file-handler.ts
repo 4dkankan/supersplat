@@ -3,7 +3,7 @@ import { path, Quat, Vec3 } from 'playcanvas';
 import { CreateDropHandler } from './drop-handler';
 import { ElementType } from './element';
 import { Events } from './events';
-import { BrowserFileSystem, MappedReadFileSystem } from './io';
+import { BrowserFileSystem, createDesktopFileStream, isDesktopFileBridgeAvailable, MappedReadFileSystem } from './io';
 import { Scene } from './scene';
 import { Splat } from './splat';
 import { SerializeSettings, serializeSog, serializeSpz, serializeViewer, SogSettings, SpzSettings, ViewerExportSettings, WebGPUUnavailableError, writeSplatFile } from './splat-serialize';
@@ -487,7 +487,7 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
         }
     });
 
-    events.function('scene.export', async (exportType: ExportType) => {
+    events.function('scene.export', async (exportType: ExportType, useDesktopFileBridge = false) => {
         const splats = getSplats();
 
         const hasFilePicker = !!window.showSaveFilePicker;
@@ -506,7 +506,16 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                     (exportType === 'sog') ? 'sog' :
                         (exportType === 'spz') ? 'spz' : 'splat';
 
-        if (hasFilePicker) {
+        if (useDesktopFileBridge && isDesktopFileBridgeAvailable()) {
+            try {
+                const stream = await createDesktopFileStream(options.filename);
+                await events.invoke('scene.write', fileType, options, stream);
+            } catch (error) {
+                if (error.name !== 'AbortError') {
+                    console.error(error);
+                }
+            }
+        } else if (hasFilePicker) {
             try {
                 const fileHandle = await window.showSaveFilePicker({
                     id: 'SuperSplatFileExport',
@@ -598,6 +607,11 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
             })     
                    
         } catch (error) {
+            try {
+                await stream?.abort?.();
+            } catch {
+                // Ignore cleanup errors after a failed write.
+            }
             if (error instanceof WebGPUUnavailableError) {
                 await events.invoke('showPopup', {
                     type: 'error',

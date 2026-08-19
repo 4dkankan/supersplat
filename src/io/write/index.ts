@@ -4,6 +4,7 @@
 
 // Browser file system
 export { BrowserFileSystem } from './browser-file-system';
+export { createDesktopFileStream, isDesktopFileBridgeAvailable } from './desktop-file-stream';
 
 // Writer utilities
 export {

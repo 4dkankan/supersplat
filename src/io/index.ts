@@ -14,6 +14,8 @@ export {
 // Write operations
 export {
     BrowserFileSystem,
+    createDesktopFileStream,
     GZipWriter,
+    isDesktopFileBridgeAvailable,
     ProgressWriter
 } from './write';
