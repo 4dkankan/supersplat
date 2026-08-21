@@ -281,8 +281,8 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
             }
 
             const mainFile = files[mainIndex];
-            const baseUrl = mainFile.url ? new URL('.', new URL(mainFile.url, window.location.href)).href : undefined;
-
+            const baseUrl = mainFile.url ? new URL('.', new URL(mainFile.url, window.location.href)).href : undefined; //可以通过url加载
+            
             // Create file system with all local files, falling back to URL loading
             const fileSystem = new MappedReadFileSystem(baseUrl);
             files.forEach((f) => {
@@ -422,7 +422,7 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
         if (fileSelector) {
             fileSelector.click();
         } else {
-            try {
+            try {//为何隐藏UI后无法加载文件了，报错
                 const handles = await window.showOpenFilePicker({
                     id: 'SuperSplatFileImport',
                     multiple: true,
@@ -457,7 +457,8 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
             }
         }
     });
-
+    
+     
     // open a folder
     events.function('scene.openAnimation', async () => {
         try {
@@ -555,6 +556,12 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
 
             const splats = splatIdx === 'all' ? getSplats() : [getSplats()[splatIdx]];
 
+            //xzw add -- 还原成默认的旋转 z为180度
+            splats.forEach(splat=>{
+                splat.move(new Vec3(), new Quat(0,0,1,0), new Vec3(1,1,1));
+            })
+
+
             switch (fileType) {
                 case 'ply':
                     await writeSplatFile(splats, serializeSettings, 'ply', 'output.ply', {}, fs);
@@ -592,9 +599,15 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                 case 'htmlViewer':
                 case 'packageViewer':
                     await serializeViewer(splats, serializeSettings, { ...viewerExportSettings!, events }, fs);
-                    break;
+                    break; 
+                    
             }
-
+            
+            //xzw add -- 恢复成我们设定的初始旋转 
+            splats.forEach(splat=>{
+                splat.move(new Vec3(), new Quat([-0.7071067811865475, 0, 0, 0.7071067811865476]), new Vec3(1,1,1));
+            })     
+                   
         } catch (error) {
             try {
                 await stream?.abort?.();
@@ -617,6 +630,8 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
             }
         } finally {
             if (useSpinner) {
+                 
+                
                 events.fire('stopSpinner');
             }
         }

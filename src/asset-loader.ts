@@ -69,6 +69,12 @@ class AssetLoader {
                 return null;
             }
             const { gsplatData, transform } = result;
+            
+            
+            
+            transform.fromEulers(-90,0,0) //xzw add  原本是0,0,180 我们的场景会倒
+                
+            
             validateGSplatData(gsplatData);
 
             const asset = this.createGSplatAsset(gsplatData, filename);
