@@ -199,12 +199,17 @@ class BottomToolbar extends Container {
         measure.dom.addEventListener('click', () => events.fire('tool.measure'));
         orient.dom.addEventListener('click', () => events.fire('tool.orient'));
         coordSpace.dom.addEventListener('click', () => events.fire('tool.toggleCoordSpace'));
-        calculate.dom.addEventListener('click', () => {
+        calculate.dom.addEventListener('click', async () => {
             if (events.invoke('scene.empty')) {
                 return;
             }
+            // ?dataSource=C%3A%5C4DKK_PROGRAM_DATA%5Ccd1bac265_202605141432119460
+            const dataSource = new URL(window.location.href).searchParams.get('dataSource');
+            const outputPath = dataSource ?
+                `${dataSource.replace(/[\\/]+$/, '')}\\tmp3dgs\\3dgs_xyzT.ply` :
+                undefined;
 
-            events.invoke('scene.export', 'ply', true);
+            await events.invoke('scene.export', 'ply', true, outputPath);
         });
         origin.dom.addEventListener('click', (e: MouseEvent) => {
             if (events.invoke('tool.active') === 'orient') {

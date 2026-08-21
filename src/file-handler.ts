@@ -486,7 +486,7 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
         }
     });
 
-    events.function('scene.export', async (exportType: ExportType, useDesktopFileBridge = false) => {
+    events.function('scene.export', async (exportType: ExportType, useDesktopFileBridge = false, outputPath?: string) => {
         const splats = getSplats();
 
         const hasFilePicker = !!window.showSaveFilePicker;
@@ -507,7 +507,9 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
 
         if (useDesktopFileBridge && isDesktopFileBridgeAvailable()) {
             try {
-                const stream = await createDesktopFileStream(options.filename);
+                const filename = outputPath ?? options.filename;
+                options.filename = filename;
+                const stream = await createDesktopFileStream(filename);
                 await events.invoke('scene.write', fileType, options, stream);
             } catch (error) {
                 if (error.name !== 'AbortError') {
