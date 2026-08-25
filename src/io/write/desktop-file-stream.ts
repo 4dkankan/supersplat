@@ -32,6 +32,7 @@ const requestParentAction = (type: string, data: Record<string, unknown> = {}, t
 class DesktopWritableStream {
     private streamId: string;
     private closed = false;
+    private closeResult: { filepath?: string; size?: number } | undefined;
 
     // Keep structured-clone and Neutralino bridge messages small enough for
     // large PLY/video exports. Writers are free to provide multi-megabyte chunks.
@@ -74,8 +75,12 @@ class DesktopWritableStream {
 
     async close(): Promise<void> {
         if (this.closed) return;
-        await requestParentAction('file-close', { streamId: this.streamId });
+        this.closeResult = await requestParentAction('file-close', { streamId: this.streamId });
         this.closed = true;
+    }
+
+    getResult(): { filepath?: string; size?: number } | undefined {
+        return this.closeResult;
     }
 
     async abort(): Promise<void> {

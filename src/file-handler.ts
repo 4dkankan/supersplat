@@ -511,11 +511,16 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                 const filename = outputPath ?? options.filename;
                 options.filename = filename;
                 const stream = await createDesktopFileStream(filename);
-                await events.invoke('scene.write', fileType, options, stream);
+                const written = await events.invoke('scene.write', fileType, options, stream);
+                if (written !== true) {
+                    return { success: false, filepath: filename };
+                }
+                return { success: true, filepath: filename, ...(stream as any).getResult?.() };
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     console.error(error);
                 }
+                return { success: false, filepath: outputPath ?? options.filename };
             }
         } else if (hasFilePicker) {
             try {
@@ -524,14 +529,16 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                     types: [filePickerTypes[fileType]],
                     suggestedName: options.filename
                 });
-                await events.invoke('scene.write', fileType, options, await fileHandle.createWritable());
+                const written = await events.invoke('scene.write', fileType, options, await fileHandle.createWritable());
+                return { success: written === true, filepath: options.filename };
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     console.error(error);
                 }
+                return { success: false, filepath: options.filename };
             }
         } else {
-            await events.invoke('scene.write', fileType, options);
+            return { success: await events.invoke('scene.write', fileType, options) === true };
         }
     });
 
@@ -608,6 +615,7 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                 splat.move(new Vec3(), new Quat([-0.7071067811865475, 0, 0, 0.7071067811865476]), new Vec3(1,1,1));
             })     
                    
+            return true;
         } catch (error) {
             try {
                 await stream?.abort?.();
@@ -628,10 +636,9 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                     message: `${message} while saving file`
                 });
             }
+            return false;
         } finally {
             if (useSpinner) {
-                 
-                
                 events.fire('stopSpinner');
             }
         }
