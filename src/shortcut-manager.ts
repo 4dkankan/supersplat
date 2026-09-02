@@ -20,6 +20,8 @@ const defaultShortcuts: Record<string, ShortcutBinding> = {
     'camera.toggleShowInfo': { keys: ['i'] },
     'select.hide': { keys: ['h'] },
     'select.unhide': { keys: ['h'], shift: 'required' },
+    'view.setOutlineSelection': { keys: ['l'], shift: 'required' }, //xzw add 切换选区是否显示轮廓 
+    
 
     // Playback
     'timeline.togglePlay': { keys: [' '] },
@@ -32,7 +34,7 @@ const defaultShortcuts: Record<string, ShortcutBinding> = {
 
     // Selection
     'select.all': { keys: ['a'], ctrl: 'required', capture: true },
-    'select.none': { keys: ['a'], ctrl: 'required', shift: 'required', capture: true },
+    'select.none': { keys: [' '] /*, ['a'] , */, ctrl: 'required', shift: 'required' , capture: true }, //xzw改 因和钉钉截图冲突
     'select.invert': { keys: ['i'], ctrl: 'required' },
     'select.delete': { keys: ['Delete', 'Backspace'] },
 

@@ -553,10 +553,29 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
             const fs = new BrowserFileSystem(filename, stream);
 
             const splats = splatIdx === 'all' ? getSplats() : [getSplats()[splatIdx]];
+            
+            let oldTrans = [],  rot1 = new Quat( 0,
+    0.7071067811865475,
+    0.7071067811865476,
+    0/* 0,-0.7071067811865475,0.7071067811865476,0 */), rot2 = rot1.clone().invert()
+              
+            const convert = function(e){ 
+                return new Vec3(-e.x,e.z,e.y)
+            } 
+             
 
             //xzw add -- 还原成默认的旋转 z为180度
             splats.forEach(splat=>{
-                splat.move(new Vec3(), new Quat(0,0,1,0), new Vec3(1,1,1));
+                /* oldTrans.push({
+                    pos: splat.entity.localPosition.clone(),
+                    rot: splat.entity.localRotation.clone(),
+                    scl: splat.entity.localScale.clone() 
+                }) */
+                
+                let qua = rot1.clone().mul(splat.entity.localRotation)
+                let pos = convert(splat.entity.localPosition) 
+                splat.move(pos, qua, null);  
+                //splat.move(new Vec3(), new Quat(0,0,1,0), new Vec3(1,1,1));
             })
 
 
@@ -602,10 +621,15 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
             }
             
             //xzw add -- 恢复成我们设定的初始旋转 
-            splats.forEach(splat=>{
+           /*  splats.forEach(splat=>{
                 splat.move(new Vec3(), new Quat([-0.7071067811865475, 0, 0, 0.7071067811865476]), new Vec3(1,1,1));
+            })  */
+            //xzw add -- 恢复旋转             
+             splats.forEach(splat=>{ 
+                let qua = rot2.clone().mul(splat.entity.localRotation)
+                let pos = convert(splat.entity.localPosition) 
+                splat.move(pos, qua, null);
             })     
-                   
         } catch (error) {
             try {
                 await stream?.abort?.();

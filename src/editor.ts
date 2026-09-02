@@ -826,6 +826,7 @@ const registerEditorEvents = (events: Events, editHistory: EditHistory, scene: S
     let outlineSelection = false;
 
     const setOutlineSelection = (value: boolean) => {
+        if(value == void 0) value = !outlineSelection //xzw add for shortcut
         if (value !== outlineSelection) {
             outlineSelection = value;
             events.fire('view.outlineSelection', outlineSelection);

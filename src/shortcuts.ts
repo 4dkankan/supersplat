@@ -109,7 +109,7 @@ class Shortcuts {
                     // consume the event
                     e.stopPropagation();
                     e.preventDefault();
-
+                    //if(options.event == 'view.setOutlineSelection') debugger
                     if (options.held) {
                         // Skip repeated keydown events, but fire on initial down and all up events
                         if (down && e.repeat) {
