@@ -32,6 +32,11 @@ const requestParentAction = (type: string, data: Record<string, unknown> = {}, t
 class DesktopWritableStream {
     private streamId: string;
     private closed = false;
+    private closeResult: { filepath?: string; size?: number } | undefined;
+
+    // Keep structured-clone and Neutralino bridge messages small enough for
+    // large PLY/video exports. Writers are free to provide multi-megabyte chunks.
+    private static readonly chunkSize = 256 * 1024;
 
     private constructor(streamId: string) {
         this.streamId = streamId;
@@ -57,8 +62,11 @@ class DesktopWritableStream {
             throw new Error('客户端文件流已关闭');
         }
 
-        const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength) as ArrayBuffer;
-        await requestParentAction('file-write', { streamId: this.streamId, buffer }, [buffer]);
+        for (let offset = 0; offset < data.byteLength; offset += DesktopWritableStream.chunkSize) {
+            const end = Math.min(offset + DesktopWritableStream.chunkSize, data.byteLength);
+            const buffer = data.buffer.slice(data.byteOffset + offset, data.byteOffset + end) as ArrayBuffer;
+            await requestParentAction('file-write', { streamId: this.streamId, buffer }, [buffer]);
+        }
     }
 
     async truncate(_size: number): Promise<void> {
@@ -67,8 +75,12 @@ class DesktopWritableStream {
 
     async close(): Promise<void> {
         if (this.closed) return;
-        await requestParentAction('file-close', { streamId: this.streamId });
+        this.closeResult = await requestParentAction('file-close', { streamId: this.streamId });
         this.closed = true;
+    }
+
+    getResult(): { filepath?: string; size?: number } | undefined {
+        return this.closeResult;
     }
 
     async abort(): Promise<void> {

@@ -487,7 +487,7 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
         }
     });
 
-    events.function('scene.export', async (exportType: ExportType, useDesktopFileBridge = false) => {
+    events.function('scene.export', async (exportType: ExportType, useDesktopFileBridge = false, outputPath?: string) => {
         const splats = getSplats();
 
         const hasFilePicker = !!window.showSaveFilePicker;
@@ -508,12 +508,19 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
 
         if (useDesktopFileBridge && isDesktopFileBridgeAvailable()) {
             try {
-                const stream = await createDesktopFileStream(options.filename);
-                await events.invoke('scene.write', fileType, options, stream);
+                const filename = outputPath ?? options.filename;
+                options.filename = filename;
+                const stream = await createDesktopFileStream(filename);
+                const written = await events.invoke('scene.write', fileType, options, stream);
+                if (written !== true) {
+                    return { success: false, filepath: filename };
+                }
+                return { success: true, filepath: filename, ...(stream as any).getResult?.() };
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     console.error(error);
                 }
+                return { success: false, filepath: outputPath ?? options.filename };
             }
         } else if (hasFilePicker) {
             try {
@@ -522,14 +529,16 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                     types: [filePickerTypes[fileType]],
                     suggestedName: options.filename
                 });
-                await events.invoke('scene.write', fileType, options, await fileHandle.createWritable());
+                const written = await events.invoke('scene.write', fileType, options, await fileHandle.createWritable());
+                return { success: written === true, filepath: options.filename };
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     console.error(error);
                 }
+                return { success: false, filepath: options.filename };
             }
         } else {
-            await events.invoke('scene.write', fileType, options);
+            return { success: await events.invoke('scene.write', fileType, options) === true };
         }
     });
 
@@ -630,6 +639,10 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                 let pos = convert(splat.entity.localPosition) 
                 splat.move(pos, qua, null);
             })     
+ 
+                   
+            return true;
+ 
         } catch (error) {
             try {
                 await stream?.abort?.();
@@ -650,10 +663,9 @@ const initFileHandler = (scene: Scene, events: Events, dropTarget: HTMLElement) 
                     message: `${message} while saving file`
                 });
             }
+            return false;
         } finally {
             if (useSpinner) {
-                 
-                
                 events.fire('stopSpinner');
             }
         }

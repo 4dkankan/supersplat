@@ -199,12 +199,41 @@ class BottomToolbar extends Container {
         measure.dom.addEventListener('click', () => events.fire('tool.measure'));
         orient.dom.addEventListener('click', () => events.fire('tool.orient'));
         coordSpace.dom.addEventListener('click', () => events.fire('tool.toggleCoordSpace'));
-        calculate.dom.addEventListener('click', () => {
+        calculate.dom.addEventListener('click', async () => {
             if (events.invoke('scene.empty')) {
                 return;
             }
+            // ?m=abcd&app_server=http://127.0.0.1:8080&data_source=C%3A%5C4DKK_PROGRAM_DATA%5Ccd1bac265_202605141432119460
+            const params = new URL(window.location.href).searchParams;
+            const num = params.get('m');
+            const appServer = params.get('app_server');
+            const dataSource = params.get('data_source');
+            const outputPath = dataSource ? `${dataSource.replace(/[\\/]+$/, '')}\\tmp3dgs\\3dgs_xyzT.ply` : undefined;
+            if (outputPath) {
+                const result = await events.invoke('scene.export', 'ply', true, outputPath);
+                if (result?.success && appServer) {
+                    try {
+                        const response = await fetch(appServer+'/service/3dgs/edit/crop/call', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                num,
+                                plyPath: result.filepath ?? outputPath
+                            })
+                        });
 
-            events.invoke('scene.export', 'ply', true);
+                        console.log('[response]', response);
+
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                    } catch (error) {
+                        console.error('Failed to notify app server after export:', error);
+                    }
+                }
+            }
         });
         origin.dom.addEventListener('click', (e: MouseEvent) => {
             if (events.invoke('tool.active') === 'orient') {
