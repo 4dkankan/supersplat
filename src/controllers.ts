@@ -398,7 +398,7 @@ class PointerController {
             if (forward || strafe || vertical) {
                 // Calculate speed modifier based on current modifier key state
                 const speedMod = fastDown ? 10 : (slowDown ? 0.1 : 1);
-                const factor = deltaTime * camera.flySpeed * speedMod;
+                const factor = deltaTime * camera.flySpeed * speedMod  * camera.position.z;   //xzw 乘了个z，否则离远了很慢
                 const worldTransform = camera.worldTransform;
 
                 moveVec.set(0, 0, 0);
